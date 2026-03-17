@@ -24,8 +24,7 @@ const CATEGORIES = [
   },
 ];
 
-const WEBHOOK_URL =
-  process.env.WEBHOOK_URL || "https://n8n.wphl.eu/webhook/958cb4a8-aa75-4ab9-a64e-567a840ec118";
+const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
 const delay = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
@@ -71,6 +70,12 @@ function parsePrice(priceString) {
 }
 
 async function runScraper() {
+  if (!WEBHOOK_URL) {
+    console.error("BŁĄD: Zmienna środowiskowa WEBHOOK_URL nie jest ustawiona.");
+    console.error("Skopiuj plik .env.example do .env i ustaw swój URL webhooka.");
+    process.exit(1);
+  }
+
   console.log("Startuję przeglądarkę...");
   let browser = null;
 

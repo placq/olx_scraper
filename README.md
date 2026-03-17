@@ -19,22 +19,28 @@ A robust Node.js web scraper that collects listings for computer components (lik
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/placq/olx_scraper.git
    cd olx_scraper
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Configure your environment variables:
-   Create a `.env` file in the root of the project and add your n8n webhook URL:
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` and add your n8n webhook URL:
    ```env
    WEBHOOK_URL=https://your-n8n-instance.com/webhook/your-uuid
    ```
-   *(If not provided, it falls back to a hardcoded default).*
+   _(Note: The scraper will not run without a valid WEBHOOK_URL)._
 
 ## Usage
 
@@ -45,15 +51,17 @@ node olx_scraper.js
 ```
 
 ### Adding New Categories
+
 To scrape additional categories, simply add them to the `CATEGORIES` array in `olx_scraper.js`:
 
 ```javascript
 const CATEGORIES = [
   { name: "procesory", url: "https://www.olx.pl/..." },
   { name: "karty_graficzne", url: "https://www.olx.pl/..." },
-  { name: "nowa_kategoria", url: "https://www.olx.pl/..." } // <-- Add here
+  { name: "nowa_kategoria", url: "https://www.olx.pl/..." }, // <-- Add here
 ];
 ```
+
 The scraper will automatically collect data for the new category and include it in the n8n payload under the key `nowa_kategoria`.
 
 ## Development & Tooling
@@ -61,11 +69,13 @@ The scraper will automatically collect data for the new category and include it 
 This project includes several tools to maintain code quality:
 
 - **Run Tests:**
+
   ```bash
   npm test
   ```
 
 - **Lint Code (ESLint):**
+
   ```bash
   npm run lint
   ```
@@ -76,4 +86,5 @@ This project includes several tools to maintain code quality:
   ```
 
 ## License
+
 ISC
