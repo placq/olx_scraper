@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OLX Scraper</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="header-content">
+          <h1>OLX Scraper</h1>
+          <div class="header-actions">
+            <button id="themeToggle" class="text-btn">Tryb ciemny</button>
+            <button id="configToggle" class="text-btn">Ustawienia</button>
+          </div>
+        </div>
+        <p>Wybierz cel i opcjonalne filtry, aby rozpocząć scrapowanie.</p>
+      </header>
+
+      <main>
+        <section class="form-section">
+          <form id="scrapeForm">
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label>1. Wybierz cel:</label>
+              <div class="radio-group" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; margin-bottom: 15px;">
+                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                  <input type="radio" name="searchMode" value="category" checked style="width: auto; margin: 0; cursor: pointer;" /> Szukaj w Kategorii
+                </label>
+                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                  <input type="radio" name="searchMode" value="phrase" style="width: auto; margin: 0; cursor: pointer;" /> Szukaj po Frazie (Cały OLX)
+                </label>
+              </div>
+
+              <div id="categoryGroup">
+                <input
+                  list="categoriesList"
+                  id="categoryInput"
+                  placeholder="Wpisz, aby wyszukać kategorię z listy..."
+                  required
+                  disabled
+                />
+                <datalist id="categoriesList"></datalist>
+              </div>
+
+              <div id="phraseGroup" style="margin-top: 10px;">
+                <input type="text" id="phraseInput" placeholder="Wpisz frazę do wyszukania (np. RTX 3080)" disabled />
+              </div>
+            </div>
+
+            <div class="form-group divider">
+              <span>2. FILTRY WYNIKÓW</span>
+            </div>
+            
+            <div class="form-group">
+                <label style="font-weight: normal; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="requireDelivery" checked style="width: auto; margin: 0; cursor: pointer;"> Tylko oferty z Przesyłką OLX
+                </label>
+            </div>
+
+            <div class="form-group">
+              <label for="searchQuery">Wymagane słowo w tytule (Opcjonalne):</label>
+              <input type="text" id="searchQuery" placeholder="np. uszkodzony" />
+              <small>Zostaną pobrane tylko oferty zawierające to słowo.</small>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="mainMinPrice">Cena od (zł):</label>
+                <input type="number" id="mainMinPrice" placeholder="0" />
+              </div>
+              <div class="form-group">
+                <label for="mainMaxPrice">Cena do (zł):</label>
+                <input type="number" id="mainMaxPrice" placeholder="99999" />
+              </div>
+            </div>
+
+            <div class="form-actions" style="display: flex; gap: 10px; margin-top: 1rem">
+              <button type="submit" id="startBtn" disabled>Uruchom Scraper</button>
+              <button
+                type="button"
+                id="stopBtn"
+                class="button-secondary"
+                style="margin-bottom: 0; display: none; border-color: #ef4444; color: #ef4444"
+              >
+                Zatrzymaj
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="logs-section">
+          <h3>Logi operacyjne</h3>
+          <div id="logsTerminal" class="terminal">
+            <p class="sys-msg">Oczekiwanie na uruchomienie zadania...</p>
+          </div>
+        </section>
+
+        <section class="results-section hidden" id="resultsSection">
+          <div class="results-header">
+            <h3>Znalezione przedmioty: <span id="itemsCount">0</span></h3>
+            <div class="results-actions">
+              <button id="downloadBtn" class="button-secondary" style="margin-bottom: 0">
+                Pobierz JSON
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table id="resultsTable">
+              <thead>
+                <tr>
+                  <th>Nazwa</th>
+                  <th>Cena</th>
+                  <th>Link</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal for Settings -->
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn" id="closeSettings">&times;</span>
+        <h2>Ustawienia</h2>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="tab-smtp">Serwer SMTP</button>
+          <button class="tab-btn" data-tab="tab-schedules">Harmonogramy zadań</button>
+        </div>
+
+        <div id="tab-smtp" class="tab-pane active">
+          <form id="smtpForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="smtpHost">Serwer SMTP (Host):</label>
+                <input type="text" id="smtpHost" placeholder="np. smtp.gmail.com" required />
+              </div>
+              <div class="form-group">
+                <label for="smtpPort">Port:</label>
+                <input type="number" id="smtpPort" placeholder="587 lub 465" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="smtpUser">Użytkownik (Login):</label>
+                <input type="text" id="smtpUser" placeholder="twoj.email@gmail.com" required />
+              </div>
+              <div class="form-group">
+                <label for="smtpPass">Hasło:</label>
+                <input
+                  type="password"
+                  id="smtpPass"
+                  placeholder="Hasło aplikacji lub konta"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="smtpFrom">Nadawca (Od kogo):</label>
+                <input type="email" id="smtpFrom" placeholder="powiadomienia@olxscraper.pl" />
+              </div>
+              <div class="form-group">
+                <label for="smtpTo">Odbiorca (Do kogo):</label>
+                <input type="email" id="smtpTo" placeholder="twoj.email@gmail.com" required />
+              </div>
+            </div>
+            <button type="submit">Zapisz ustawienia SMTP</button>
+          </form>
+        </div>
+
+        <div id="tab-schedules" class="tab-pane hidden">
+          <div class="schedule-list" id="scheduleList">
+          </div>
+
+          <h3 style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem">
+            Dodaj nowe zadanie w tle
+          </h3>
+          <form id="scheduleForm">
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label>1. Wybierz cel:</label>
+              <div class="radio-group" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; margin-bottom: 15px;">
+                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                  <input type="radio" name="schedSearchMode" value="category" checked style="width: auto; margin: 0; cursor: pointer;" /> Kategoria
+                </label>
+                <label style="font-weight: normal; display: flex; align-items: center; gap: 5px;">
+                  <input type="radio" name="schedSearchMode" value="phrase" style="width: auto; margin: 0; cursor: pointer;" /> Frazą
+                </label>
+              </div>
+
+              <div id="schedCategoryGroup">
+                <select id="scheduleCategory" required>
+                  <option value="">-- Wybierz kategorię z listy --</option>
+                </select>
+              </div>
+
+              <div id="schedPhraseGroup" style="margin-top: 10px;">
+                <input type="text" id="scheduleQuery" placeholder="Wpisz frazę (np. RTX 3080)" disabled />
+              </div>
+            </div>
+
+            <div class="form-group">
+                <label style="font-weight: normal; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="schedRequireDelivery" checked style="width: auto; margin: 0; cursor: pointer;"> Tylko oferty z Przesyłką OLX
+                </label>
+            </div>
+
+            <div class="filters-panel" style="margin-bottom: 1rem">
+              <div class="filter-group">
+                <label for="schedFilterName">Wymagane słowo:</label>
+                <input type="text" id="schedFilterName" placeholder="np. intel" />
+              </div>
+              <div class="filter-group">
+                <label for="schedFilterMinPrice">Cena od (zł):</label>
+                <input type="number" id="schedFilterMinPrice" placeholder="0" />
+              </div>
+              <div class="filter-group">
+                <label for="schedFilterMaxPrice">Cena do (zł):</label>
+                <input type="number" id="schedFilterMaxPrice" placeholder="99999" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 0 0 150px">
+                <label for="scheduleTime">Godzina (HH:MM):</label>
+                <input type="time" id="scheduleTime" required />
+              </div>
+              <div class="form-group">
+                <label>Dni tygodnia:</label>
+                <div class="checkbox-group">
+                  <label><input type="checkbox" name="schedDays" value="1" checked /> Pn</label>
+                  <label><input type="checkbox" name="schedDays" value="2" checked /> Wt</label>
+                  <label><input type="checkbox" name="schedDays" value="3" checked /> Śr</label>
+                  <label><input type="checkbox" name="schedDays" value="4" checked /> Cz</label>
+                  <label><input type="checkbox" name="schedDays" value="5" checked /> Pt</label>
+                  <label><input type="checkbox" name="schedDays" value="6" checked /> Sb</label>
+                  <label><input type="checkbox" name="schedDays" value="0" checked /> Nd</label>
+                </div>
+              </div>
+            </div>
+            <button type="submit">Dodaj do harmonogramu</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
